@@ -1,17 +1,15 @@
 #include <iostream>
 #include <string>
-#include <WinSock2.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 #include "common.h"
 #include "security.h"
 using namespace std;
 
-#pragma comment(lib, "ws2_32.lib")
-
 int main() {
-    WSADATA wsaData;
-    WSAStartup(MAKEWORD(2, 2), &wsaData);
-    
-    SOCKET server_socket = socket(AF_INET, SOCK_STREAM, 0);
+    int server_socket = socket(AF_INET, SOCK_STREAM, 0);
     sockaddr_in addr = {AF_INET, htons(SERVER_PORT), {INADDR_ANY}};
     
     bind(server_socket, (sockaddr*)&addr, sizeof(addr));
@@ -19,7 +17,7 @@ int main() {
     cout << "Server listening on port " << SERVER_PORT << endl;
     
     while (true) {
-        SOCKET client = accept(server_socket, 0, 0);
+        int client = accept(server_socket, 0, 0);
         cout << "Client connected" << endl;
         
         DiffieHellman dh;
@@ -50,10 +48,10 @@ int main() {
             cout << "Command: " << command << endl;
         }
         
-        closesocket(client);
+        close(client);
         cout << "Client disconnected" << endl;
     }
     
-    WSACleanup();
+    close(server_socket);
     return 0;
 }

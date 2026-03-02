@@ -1,17 +1,15 @@
 #include <iostream>
 #include <string>
-#include <WinSock2.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <unistd.h>
 #include "common.h"
 #include "security.h"
 using namespace std;
 
-#pragma comment(lib, "ws2_32.lib")
-
 int main() {
-    WSADATA wsaData;
-    WSAStartup(MAKEWORD(2, 2), &wsaData);
-    
-    SOCKET client_socket = socket(AF_INET, SOCK_STREAM, 0);
+    int client_socket = socket(AF_INET, SOCK_STREAM, 0);
     sockaddr_in addr = {AF_INET, htons(SERVER_PORT)};
     addr.sin_addr.s_addr = inet_addr("127.0.0.1");
     
@@ -51,7 +49,6 @@ int main() {
         cout << "Sent: " << command << endl;
     }
     
-    closesocket(client_socket);
-    WSACleanup();
+    close(client_socket);
     return 0;
 }

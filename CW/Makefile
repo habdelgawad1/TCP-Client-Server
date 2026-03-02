@@ -1,16 +1,15 @@
 CXX = g++
 CXXFLAGS = -std=c++11 -O2
-LIBS = -lws2_32
 
-all: client.exe server.exe
+all: client server
 
-client.exe: client.cpp security.cpp
-	$(CXX) $(CXXFLAGS) -o client.exe client.cpp security.cpp $(LIBS)
+client: client.cpp security.cpp
+	$(CXX) $(CXXFLAGS) -o client client.cpp security.cpp
 
-server.exe: server.cpp security.cpp
-	$(CXX) $(CXXFLAGS) -o server.exe server.cpp security.cpp $(LIBS)
+server: server.cpp security.cpp
+	$(CXX) $(CXXFLAGS) -o server server.cpp security.cpp
 
 clean:
-	del /f client.exe server.exe 2>nul || true
+	rm -f client server
 
 .PHONY: all clean
