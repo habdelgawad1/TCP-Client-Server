@@ -10,11 +10,11 @@ using namespace std;
 
 int main() {
     // Create server socket
-    int server_socket = socket(IP, SOCK_STREAM, 0);
+    int server_socket = socket(AF_INET, SOCK_STREAM, 0);
     
     // Configure server address structure
     // INADDR_ANY means accept connections on any network interface
-    sockaddr_in addr = {IP, htons(SERVER_PORT), {INADDR_ANY}};
+    sockaddr_in addr = {AF_INET, htons(SERVER_PORT), {INADDR_ANY}};
     
     // Bind socket to the specified port and start listening
     bind(server_socket, (sockaddr*)&addr, sizeof(addr));

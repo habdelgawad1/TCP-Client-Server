@@ -11,10 +11,10 @@ using namespace std;
 int main() {
     //Create TCP socket for communication
     //IPv4, SOCK_STREAM = TCP protocol
-    int client_socket = socket(IP, SOCK_STREAM, 0);
+    int client_socket = socket(AF_INET, SOCK_STREAM, 0);
     
     //Configure server address structure
-    sockaddr_in addr = {IP, htons(SERVER_PORT)};  //Converts port to network byte order
+    sockaddr_in addr = {AF_INET, htons(SERVER_PORT)};  //Converts port to network byte order
     addr.sin_addr.s_addr = inet_addr("127.0.0.1"); 
     
     //Attempt to connect to the server
