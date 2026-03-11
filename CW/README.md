@@ -5,8 +5,6 @@
 - g++ compiler with C++11 support
 - Unix socket libraries (included in Linux)
 
-**NOT COMPATIBLE WITH WINDOWS**
-
 Implementation uses Diffie-Hellman key exchange + XOR encryption for secure TCP communication.
 
 ## System Requirements
@@ -55,4 +53,3 @@ Type `exit` to quit client.
 - Uses Unix socket API (`sys/socket.h`, `netinet/in.h`, etc.)
 - Requires Unix `close()` function for socket cleanup
 - Build system uses Unix `rm` command
-- **Will NOT compile or run on Windows without significant modifications**
