@@ -44,7 +44,7 @@ void* handle_client(void* arg){
 
         //Lock mutex to safely print command
         pthread_mutex_lock(&mutex);
-        cout << "Command: " << command << endl;
+        cout << "[Thread " << pthread_self() << "]" "Command: " << command << endl;
         pthread_mutex_unlock(&mutex);
 
     }
