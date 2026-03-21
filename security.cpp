@@ -105,3 +105,19 @@ long long random_number() {
     static mt19937 gen(rd());        // Mersenne Twister seeded with hardware RNG
     return gen() % 1000000 + 1000;   // Return number in safe range
 }
+
+bool isCommandAllowed(int level, std::string& command){
+    if (level == ADMIN) {
+        return true;
+    }
+    if(command.find("rm ") != string::npos || command.find("delete ") != string::npos){
+        return false;
+    }
+    if (level == USER) {
+        if(command.find("cp ") != string::npos || command.find("edit ") != string::npos || command.find("mv ") != string::npos){
+            return false;
+        }
+        return true;
+    }
+}
+

@@ -1,0 +1,6 @@
+guest:entry:0
+viewer:view:0
+staff:mid:1
+employee:check:1
+admin:admin:2
+IT:secret:2

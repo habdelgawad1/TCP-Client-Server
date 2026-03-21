@@ -41,4 +41,6 @@ public:
 long long power_mod(long long base, long long exp, long long mod);
 long long random_number();
 
+bool isCommandAllowed(int level, const std::string& command);
+
 #endif 

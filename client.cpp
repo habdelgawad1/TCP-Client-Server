@@ -46,7 +46,31 @@ int main() {
     //Initialize cipher with the shared secret
     cipher.setKey(dh.getSharedSecret());
     
-    cout << "Encryption established. Enter commands (exit to quit):" << endl;
+    bool logged_in = false;
+    while (!logged_in){
+        string username, password;
+        cout << "Username: ";
+        getline(cin, username);
+        cout << "Password: ";
+        getline(cin, password);
+
+        string login = username + ":" + password;
+        string encrypted = cipher.encrypt(login);
+        string hex = cipher.toHex(encrypted);
+        send(client_socket, hex.c_str(), hex.length(), 0);
+
+        char response[BUFFER_SIZE];
+        int len = recv(client_socket, response, BUFFER_SIZE, 0);
+        response[len] = 0;
+
+        string decrypted_response = cipher.encrypt(cipher.fromHex(string(response)));
+        if (decrypted_response == "AUTH_SUCCESS\n") {
+            cout << "Login successful!" << endl;
+            logged_in = true;
+        } else {
+            cout << "Login failed. Try again." << endl;
+        }
+    }
     
     //SECURE COMMAND LOOP
     string command;
