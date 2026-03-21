@@ -22,6 +22,7 @@ vector<User> loadUsers() {
         stringstream ss(line);
         string username, password, level;
         if (getline(ss, username, ":") && getline(ss, password, ":") && getline(ss,level, ":")){
+            AccessLevel level = (AccessLevel)stoi(level);
             users.push_back({username, password, level});
         }
     }
@@ -101,7 +102,8 @@ void* handle_client(void* arg){
     // Clean up client connection
     close(client);
     return nullptr;
-}
+}}
+
 int main() {
     // Create server socket
     int server_socket = socket(AF_INET, SOCK_STREAM, 0);
