@@ -15,8 +15,8 @@ enum AccessLevel {
 };
 
 struct User {
-    const char* username;
-    const char* password; 
+    std::string username;
+    std::string password;
     AccessLevel level;
 };
 

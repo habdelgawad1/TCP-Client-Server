@@ -64,7 +64,7 @@ void* handle_client(void* arg){
             string username = decrypted.substr(0, delimiter);
             string password = decrypted.substr(delimiter + 1);
             for (auto& user : users){
-                if (user==user.username && password == user.password){
+                if (username == user.username && password == user.password){
                     current_level = user.level;
                     break;
                 }
@@ -87,10 +87,11 @@ void* handle_client(void* arg){
         string encrypted = cipher.fromHex(hex);       
         string command = cipher.encrypt(encrypted);  
         
-        if (!cipher.isCommandAllowed(current_level, command)) {
+        if (!isCommandAllowed(current_level, command)) {
             string msg = cipher.toHex(cipher.encrypt("Access Denied: Level Insufficient\n"));
             send(client, msg.c_str(), msg.length(), 0);
             continue;
+        }
 
         //Lock mutex to safely print command
         pthread_mutex_lock(&mutex);
@@ -102,7 +103,7 @@ void* handle_client(void* arg){
     // Clean up client connection
     close(client);
     return nullptr;
-}}
+}
 
 int main() {
     // Create server socket
@@ -113,7 +114,7 @@ int main() {
     
     // Bind socket to the specified port and start listening
     bind(server_socket, (sockaddr*)&addr, sizeof(addr));
-    listen(server_socket, 1);
+    listen(server_socket, 8);
     cout << "Server listening on port " << SERVER_PORT << endl;
     
     // Main Server Loop

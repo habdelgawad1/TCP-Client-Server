@@ -106,7 +106,7 @@ long long random_number() {
     return gen() % 1000000 + 1000;   // Return number in safe range
 }
 
-bool isCommandAllowed(int level, std::string& command){
+bool isCommandAllowed(int level, const std::string& command){
     if (level == ADMIN) {
         return true;
     }
@@ -119,5 +119,8 @@ bool isCommandAllowed(int level, std::string& command){
         }
         return true;
     }
+
+    // Unknown levels are denied by default.
+    return false;
 }
 
