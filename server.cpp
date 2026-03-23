@@ -20,9 +20,9 @@ vector<User> loadUsers() {
     string line;
     while (getline(file,line)){
         stringstream ss(line);
-        string username, password, level;
-        if (getline(ss, username, ":") && getline(ss, password, ":") && getline(ss,level, ":")){
-            AccessLevel level = (AccessLevel)stoi(level);
+        string username, password, level_str;
+        if (getline(ss, username, ':') && getline(ss, password, ':') && getline(ss, level_str, ':')){
+            AccessLevel level = static_cast<AccessLevel>(stoi(level_str));
             users.push_back({username, password, level});
         }
     }

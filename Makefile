@@ -3,7 +3,7 @@
 # Platform: Ubuntu/Linux (NOT compatible with Windows)
 
 CXX = g++
-CXXflags = -std=c++11 -O2 -Wall
+CXXFLAGS = -std=c++11 -O2 -Wall -pthread
 
 # Build both client and server
 all: client server
