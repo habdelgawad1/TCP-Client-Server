@@ -110,14 +110,13 @@ bool isCommandAllowed(int level, const std::string& command){
     if (level == ADMIN) {
         return true;
     }
+    // Block dangerous commands for non-admin users
     if(command.find("rm ") != string::npos || command.find("delete ") != string::npos){
         return false;
     }
     if (level == USER) {
-        if(command.find("cp ") != string::npos || command.find("edit ") != string::npos || command.find("mv ") != string::npos){
-            return true;
-        }
-        return false;
+        // User can run any command except blocked ones
+        return true;
     }
 
     // Unknown levels are denied by default.
