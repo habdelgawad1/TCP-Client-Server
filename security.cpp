@@ -115,9 +115,9 @@ bool isCommandAllowed(int level, const std::string& command){
     }
     if (level == USER) {
         if(command.find("cp ") != string::npos || command.find("edit ") != string::npos || command.find("mv ") != string::npos){
-            return false;
+            return true;
         }
-        return true;
+        return false;
     }
 
     // Unknown levels are denied by default.
