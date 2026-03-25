@@ -8,6 +8,26 @@
 #include "security.h"      
 using namespace std;
 
+bool recvLine(int socket_fd, string& out) {
+    out.clear();
+    char ch;
+
+    while (true) {
+        int n = recv(socket_fd, &ch, 1, 0);
+        if (n <= 0) {
+            return false;
+        }
+        if (ch == '\n') {
+            return true;
+        }
+        out.push_back(ch);
+
+        if (out.size() > static_cast<size_t>(BUFFER_SIZE * 4)) {
+            return false;
+        }
+    }
+}
+
 int main() {
     //Create TCP socket for communication
     //IPv4, SOCK_STREAM = TCP protocol
@@ -32,9 +52,13 @@ int main() {
     dh.generateKeys();
     
     // Receive server's public key
-    char buffer[BUFFER_SIZE];
-    recv(client_socket, buffer, BUFFER_SIZE, 0);           
-    long long server_key = stoll(string(buffer));    
+    string server_key_line;
+    if (!recvLine(client_socket, server_key_line)) {
+        cout << "Failed to receive server key" << endl;
+        close(client_socket);
+        return 1;
+    }
+    long long server_key = stoll(server_key_line);
     
     // Send public key to the server
     string my_key = to_string(dh.getPublicKey()) + "\n";  
@@ -57,13 +81,17 @@ int main() {
         string login = username + ":" + password;
         string encrypted = cipher.encrypt(login);
         string hex = cipher.toHex(encrypted);
-        send(client_socket, hex.c_str(), hex.length(), 0);
+        string framed = hex + "\n";
+        send(client_socket, framed.c_str(), framed.length(), 0);
 
-        char response[BUFFER_SIZE];
-        int len = recv(client_socket, response, BUFFER_SIZE, 0);
-        response[len] = 0;
+        string response_hex;
+        if (!recvLine(client_socket, response_hex)) {
+            cout << "Disconnected during login" << endl;
+            close(client_socket);
+            return 1;
+        }
+        string decrypted_response = cipher.encrypt(cipher.fromHex(response_hex));
 
-        string decrypted_response = cipher.encrypt(cipher.fromHex(string(response)));
         if (decrypted_response == "AUTH_SUCCESS\n") {
             cout << "Login successful!" << endl;
             logged_in = true;
@@ -84,8 +112,16 @@ int main() {
         string hex = cipher.toHex(encrypted);
         
         // Send encrypted command to server
-        send(client_socket, hex.c_str(), hex.length(), 0);
-        cout << "Sent: " << command << endl;
+        string framed = hex + "\n";
+        send(client_socket, framed.c_str(), framed.length(), 0);
+
+        string reply_hex;
+        if (!recvLine(client_socket, reply_hex)) {
+            cout << "Disconnected from server" << endl;
+            break;
+        }
+        string reply = cipher.encrypt(cipher.fromHex(reply_hex));
+        cout << "Server: " << reply;
     }
     
     //Clean up and close connection

@@ -14,6 +14,27 @@ using namespace std;
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 
+bool recvLine(int socket_fd, string& out) {
+    out.clear();
+    char ch;
+
+    while (true) {
+        int n = recv(socket_fd, &ch, 1, 0);
+        if (n <= 0) {
+            return false;
+        }
+        if (ch == '\n') {
+            return true;
+        }
+        out.push_back(ch);
+
+        // Guard against malformed or unbounded payloads.
+        if (out.size() > static_cast<size_t>(BUFFER_SIZE * 4)) {
+            return false;
+        }
+    }
+}
+
 vector<User> loadUsers() {
     vector<User> users;
     ifstream file("users.txt");
@@ -43,22 +64,27 @@ void* handle_client(void* arg){
     send(client, my_key.c_str(), my_key.length(), 0);
 
     // Receive client's public key
-    char buffer[BUFFER_SIZE];
-    recv(client, buffer, BUFFER_SIZE, 0);
-    dh.computeSharedSecret(stoll(string(buffer)));
+    string client_key_line;
+    if (!recvLine(client, client_key_line)) {
+        close(client);
+        return nullptr;
+    }
+    dh.computeSharedSecret(stoll(client_key_line));
+
     cipher.setKey(dh.getSharedSecret());
 
     vector<User> users = loadUsers();
     int current_level = -1;
-    char auth_buffer[BUFFER_SIZE];
 
     while (current_level == -1){
-        int len = recv(client, auth_buffer, BUFFER_SIZE, 0);
-        if (len <= 0){
+        string auth_hex;
+        if (!recvLine(client, auth_hex)) {
+            close(client);
             return nullptr;
         }
-        auth_buffer[len] = 0;
-        string decrypted = cipher.encrypt(cipher.fromHex(string(auth_buffer)));
+
+        string decrypted = cipher.encrypt(cipher.fromHex(auth_hex));
+
         size_t delimiter = decrypted.find(":");
         if (delimiter != string::npos){
             string username = decrypted.substr(0, delimiter);
@@ -71,24 +97,20 @@ void* handle_client(void* arg){
             }
         }
         string response = (current_level != -1) ? "AUTH_SUCCESS\n" : "AUTH_FAIL\n";
-        string encrypted_response = cipher.toHex(cipher.encrypt(response));
+        string encrypted_response = cipher.toHex(cipher.encrypt(response)) + "\n";
         send(client, encrypted_response.c_str(), encrypted_response.length(), 0);
     }
 
     // Secure Command Reception Loop
     while (true) {
-        int len = recv(client, buffer, BUFFER_SIZE, 0);
-        if (len <= 0) break; 
+        string hex;
+        if (!recvLine(client, hex)) break;
 
-        // Null-terminate the received data
-        buffer[len] = 0;
-
-        string hex(buffer);                           
-        string encrypted = cipher.fromHex(hex);       
-        string command = cipher.encrypt(encrypted);  
+        string encrypted = cipher.fromHex(hex);
+        string command = cipher.encrypt(encrypted);
         
         if (!isCommandAllowed(current_level, command)) {
-            string msg = cipher.toHex(cipher.encrypt("Access Denied: Level Insufficient\n"));
+            string msg = cipher.toHex(cipher.encrypt("Access Denied: Level Insufficient\n")) + "\n";
             send(client, msg.c_str(), msg.length(), 0);
             continue;
         }
@@ -97,6 +119,9 @@ void* handle_client(void* arg){
         pthread_mutex_lock(&mutex);
         cout << "[Thread " << pthread_self() << "]" "Command: " << command << endl;
         pthread_mutex_unlock(&mutex);
+
+        string ok = cipher.toHex(cipher.encrypt("OK\n")) + "\n";
+        send(client, ok.c_str(), ok.length(), 0);
 
     }
 
