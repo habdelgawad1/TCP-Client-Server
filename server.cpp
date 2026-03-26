@@ -140,12 +140,12 @@ int main() {
     // Bind socket to the specified port and start listening
     bind(server_socket, (sockaddr*)&addr, sizeof(addr));
     listen(server_socket, 8);
-    cout << "Server listening on port " << SERVER_PORT << endl;
+    cout << "Server Listening On Port " << SERVER_PORT << endl;
     
     // Main Server Loop
     while (true) {
         int client = accept(server_socket, 0, 0);
-        cout << "Client connected" << endl;
+        cout << "Client Connected" << endl;
         
         pthread_t thread_id;
         pthread_create(&thread_id, nullptr, handle_client, (void*)(intptr_t)client);

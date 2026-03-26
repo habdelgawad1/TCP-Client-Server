@@ -106,17 +106,34 @@ long long random_number() {
     return gen() % 1000000 + 1000;   // Return number in safe range
 }
 
-bool isCommandAllowed(int level, const std::string& command){
+bool isCommandAllowed(int level, const string& command){
     if (level == ADMIN) {
+        // Full command access.
         return true;
     }
-    // Block dangerous commands for non-admin users
-    if(command.find("rm ") != string::npos || command.find("delete ") != string::npos){
+
+    // Entry and medium users cannot perform deletion operations.
+    if (command == "rm" || command.find("rm ") == 0 ||
+        command == "del" || command.find("del ") == 0 ||
+        command == "delete" || command.find("delete ") == 0 ||
+        command == "rmdir" || command.find("rmdir ") == 0) {
         return false;
     }
+
     if (level == USER) {
-        // User can run any command except blocked ones
-        return true;
+        // Medium level: allow only specific read/copy/edit commands.
+        return (command == "ls" || command.find("ls ") == 0 ||
+                command == "cat" || command.find("cat ") == 0 ||
+                command == "cp" || command.find("cp ") == 0 ||
+                command == "mv" || command.find("mv ") == 0 ||
+                command == "touch" || command.find("touch ") == 0 ||
+                command == "nano" || command.find("nano ") == 0);
+    }
+
+    if (level == GUEST) {
+        // Entry level: basic read-only commands only.
+        return (command == "ls" || command.find("ls ") == 0 ||
+                command == "cat" || command.find("cat ") == 0);
     }
 
     // Unknown levels are denied by default.

@@ -39,10 +39,10 @@ int main() {
     
     //Attempt to connect to the server
     if (connect(client_socket, (sockaddr*)&addr, sizeof(addr)) != 0) {
-        cout << "Connection failed" << endl;
+        cout << "Connection Failed" << endl;
         return 1;
     }
-    cout << "Connected to server" << endl;
+    cout << "Connected To Server" << endl;
     
     //Initialize cryptographic objects
     DiffieHellman dh;    
@@ -54,7 +54,7 @@ int main() {
     // Receive server's public key
     string server_key_line;
     if (!recvLine(client_socket, server_key_line)) {
-        cout << "Failed to receive server key" << endl;
+        cout << "Failed To Receive Server Key" << endl;
         close(client_socket);
         return 1;
     }
@@ -86,17 +86,17 @@ int main() {
 
         string response_hex;
         if (!recvLine(client_socket, response_hex)) {
-            cout << "Disconnected during login" << endl;
+            cout << "Disconnected During Login" << endl;
             close(client_socket);
             return 1;
         }
         string decrypted_response = cipher.encrypt(cipher.fromHex(response_hex));
 
         if (decrypted_response == "AUTH_SUCCESS\n") {
-            cout << "Login successful!" << endl;
+            cout << "Login Successful!" << endl;
             logged_in = true;
         } else {
-            cout << "Login failed. Try again." << endl;
+            cout << "Login Failed. Try again." << endl;
         }
     }
     
@@ -117,7 +117,7 @@ int main() {
 
         string reply_hex;
         if (!recvLine(client_socket, reply_hex)) {
-            cout << "Disconnected from server" << endl;
+            cout << "Disconnected From Server" << endl;
             break;
         }
         string reply = cipher.encrypt(cipher.fromHex(reply_hex));
