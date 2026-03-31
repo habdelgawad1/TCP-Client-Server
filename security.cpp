@@ -112,28 +112,38 @@ bool isCommandAllowed(int level, const string& command){
         return true;
     }
 
-    // Entry and medium users cannot perform deletion operations.
+    // USER and GUEST cannot perform deletion operations.
     if (command == "rm" || command.find("rm ") == 0 ||
-        command == "del" || command.find("del ") == 0 ||
-        command == "delete" || command.find("delete ") == 0 ||
         command == "rmdir" || command.find("rmdir ") == 0) {
         return false;
     }
 
     if (level == USER) {
-        // Medium level: allow only specific read/copy/edit commands.
+        // USER level: read, copy, create, file operations, and navigation.
         return (command == "ls" || command.find("ls ") == 0 ||
                 command == "cat" || command.find("cat ") == 0 ||
+                command == "pwd" || command.find("pwd ") == 0 ||
+                command == "cd" || command.find("cd ") == 0 ||
                 command == "cp" || command.find("cp ") == 0 ||
                 command == "mv" || command.find("mv ") == 0 ||
                 command == "touch" || command.find("touch ") == 0 ||
-                command == "nano" || command.find("nano ") == 0);
+                command == "mkdir" || command.find("mkdir ") == 0 ||
+                command == "grep" || command.find("grep ") == 0 ||
+                command == "find" || command.find("find ") == 0 ||
+                command == "head" || command.find("head ") == 0 ||
+                command == "tail" || command.find("tail ") == 0 ||
+                command == "echo" || command.find("echo ") == 0);
     }
 
     if (level == GUEST) {
-        // Entry level: basic read-only commands only.
+        // GUEST level: basic read-only commands only.
         return (command == "ls" || command.find("ls ") == 0 ||
-                command == "cat" || command.find("cat ") == 0);
+                command == "cat" || command.find("cat ") == 0 ||
+                command == "cd" || command.find("cd ") == 0 ||
+                command == "pwd" || command.find("pwd ") == 0 ||
+                command == "head" || command.find("head ") == 0 ||
+                command == "tail" || command.find("tail ") == 0 ||
+                command == "grep" || command.find("grep ") == 0);
     }
 
     // Unknown levels are denied by default.

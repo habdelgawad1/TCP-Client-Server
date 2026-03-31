@@ -9,7 +9,9 @@
 #include "security.h"  
 #include <sstream>      // For string stream operations
 #include <fstream>       // For file I/O
-#include <vector>      // For user list    
+#include <vector>      // For user list
+#include <cstdlib>      // For system() command execution
+#include <cstdio>       // For popen/pclose command output capture    
 using namespace std;
 
 pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
@@ -115,13 +117,27 @@ void* handle_client(void* arg){
             continue;
         }
 
-        //Lock mutex to safely print command
+        //Lock mutex and execute command, capturing output
         pthread_mutex_lock(&mutex);
-        cout << "[Thread " << pthread_self() << "]" "Command: " << command << endl;
+        cout << "[Thread " << pthread_self() << "]" "Executing: " << command << endl;
+        
+        string output;
+        FILE* pipe = popen(command.c_str(), "r");
+        if (pipe) {
+            char buffer[128];
+            while (fgets(buffer, sizeof(buffer), pipe) != nullptr) {
+                output += buffer;
+            }
+            pclose(pipe);
+        }
         pthread_mutex_unlock(&mutex);
 
-        string ok = cipher.toHex(cipher.encrypt("OK\n")) + "\n";
-        send(client, ok.c_str(), ok.length(), 0);
+        // Send command output back to client
+        if (output.empty()) {
+            output = "OK\n";
+        }
+        string reply = cipher.toHex(cipher.encrypt(output)) + "\n";
+        send(client, reply.c_str(), reply.length(), 0);
 
     }
 
