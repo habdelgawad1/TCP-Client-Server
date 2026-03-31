@@ -119,7 +119,7 @@ void* handle_client(void* arg){
 
         //Lock mutex and execute command, capturing output
         pthread_mutex_lock(&mutex);
-        cout << "[Thread " << pthread_self() << "]" "Executing: " << command << endl;
+        cout << "[Thread " << pthread_self() << "] Executing: " << command << endl;
         
         string output;
         FILE* pipe = popen(command.c_str(), "r");
