@@ -24,6 +24,6 @@ clean:
 # Install dependencies on Ubuntu (if needed)
 install-deps:
 	sudo apt-get update
-	sudo apt-get install build-essential g++
+	sudo apt-get install build-essential g++ libssl-dev
 
 .PHONY: all clean install-deps
