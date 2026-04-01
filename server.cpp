@@ -93,8 +93,9 @@ void* handle_client(void* arg){
         if (delimiter != string::npos){
             string username = decrypted.substr(0, delimiter);
             string password = decrypted.substr(delimiter + 1);
+            string hashed_password = hashPassword(password);  // Hash the incoming password
             for (auto& user : users){
-                if (username == user.username && password == user.password){
+                if (username == user.username && hashed_password == user.password){
                     current_level = user.level;
                     break;
                 }

@@ -41,6 +41,9 @@ public:
 // Server authentication function using HMAC-SHA256
 string computeHMAC(const string& data, long long secret);
 
+// Password hashing function using SHA256
+string hashPassword(const string& password);
+
 // Modular exponentiation: compute (base^exp) mod mod efficiently
 long long power_mod(long long base, long long exp, long long mod);
 long long random_number();

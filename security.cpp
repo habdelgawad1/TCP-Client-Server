@@ -144,6 +144,22 @@ string computeHMAC(const string& data, long long secret) {
 }
 
 /**
+ * Hash Password using SHA256
+ * Converts the password to a hexadecimal SHA256 hash for secure storage
+ */
+string hashPassword(const string& password) {
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    SHA256((unsigned char*)password.c_str(), password.length(), hash);
+    
+    stringstream ss;
+    ss << hex << setfill('0');
+    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
+        ss << setw(2) << (unsigned int)hash[i];
+    }
+    return ss.str();
+}
+
+/**
  * Efficiently computes (base^exp) mod mod using binary exponentiation.
  * This prevents integer overflow that would occur with naive base^exp calculation.
  * If exp bit is 1: multiply result by current base power

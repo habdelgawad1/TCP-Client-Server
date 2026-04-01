@@ -1,6 +1,6 @@
-guest:entry:0
-viewer:view:0
-staff:mid:1
-employee:check:1
-admin:admin:2
-IT:secret:2
+guest:923fe53966c6cd9343e11af776cd4b05be315ea4b200b02e4d5dfb0f929b73bf:0
+viewer:2bcb43cbc8f6b7ef66331532881143fcbae60a879db3a8fb853f645bb24c2b3c:0
+staff:90ac16783fbc54c3689c63b3ab89b39cea28f8743a88ff34e6a1c61ed746d0e2:1
+employee:20f65c28671b40937c5bf23acc7c6f37e5a5ec0622e347b57685725df5ba9e50:1
+admin:8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918:2
+IT:2bb80d537b1da3e38bd30361aa855686bde0eacd7162fef6a25fe97bf527a25b:2
