@@ -43,7 +43,15 @@ void AESCipher::setKey(long long secret) {
 // AES Encryption (AES-256-CBC with PKCS7 padding)
 string AESCipher::encrypt(const string& text) {
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
-    unsigned char iv[EVP_MAX_IV_LENGTH] = {0};  // IV of zeros for simplicity
+    unsigned char iv[EVP_MAX_IV_LENGTH];
+    
+    // Generate random IV
+    random_device rd;
+    mt19937 gen(rd());
+    uniform_int_distribution<unsigned int> dis(0, 255);
+    for (int i = 0; i < EVP_MAX_IV_LENGTH; i++) {
+        iv[i] = dis(gen);
+    }
     
     int len = 0;
     int ciphertext_len = 0;
@@ -56,20 +64,30 @@ string AESCipher::encrypt(const string& text) {
     ciphertext_len += len;
     EVP_CIPHER_CTX_free(ctx);
     
-    return string((char*)ciphertext, ciphertext_len);
+    // Prepend IV to ciphertext
+    string result;
+    result.append((char*)iv, EVP_MAX_IV_LENGTH);
+    result.append((char*)ciphertext, ciphertext_len);
+    return result;
 }
 
 // AES Decryption (AES-256-CBC with PKCS7 padding)
 string AESCipher::decrypt(const string& text) {
     EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
-    unsigned char iv[EVP_MAX_IV_LENGTH] = {0};  // IV of zeros for simplicity
+    
+    // Extract IV from the beginning of the encrypted text
+    unsigned char iv[EVP_MAX_IV_LENGTH];
+    memcpy(iv, text.c_str(), EVP_MAX_IV_LENGTH);
+    
+    // Extract ciphertext (everything after the IV)
+    const string ciphertext = text.substr(EVP_MAX_IV_LENGTH);
     
     int len = 0;
     int plaintext_len = 0;
     unsigned char plaintext[text.length() + EVP_MAX_BLOCK_LENGTH];
     
     EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), nullptr, key, iv);
-    EVP_DecryptUpdate(ctx, plaintext, &len, (unsigned char*)text.c_str(), text.length());
+    EVP_DecryptUpdate(ctx, plaintext, &len, (unsigned char*)ciphertext.c_str(), ciphertext.length());
     plaintext_len = len;
     EVP_DecryptFinal_ex(ctx, plaintext + len, &len);
     plaintext_len += len;
