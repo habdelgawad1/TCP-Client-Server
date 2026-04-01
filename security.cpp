@@ -151,12 +151,10 @@ string hashPassword(const string& password) {
     unsigned char hash[SHA256_DIGEST_LENGTH];
     SHA256((unsigned char*)password.c_str(), password.length(), hash);
     
-    stringstream ss;
-    ss << hex << setfill('0');
-    for (int i = 0; i < SHA256_DIGEST_LENGTH; i++) {
-        ss << setw(2) << (unsigned int)hash[i];
-    }
-    return ss.str();
+    // Convert hash binary data to string and use existing toHex function
+    string hash_str((char*)hash, SHA256_DIGEST_LENGTH);
+    AESCipher cipher;
+    return cipher.toHex(hash_str);
 }
 
 /**
