@@ -1,6 +1,6 @@
 # Secure Remote Command Execution System
 
-A multi-threaded, encrypted TCP client-server system for executing Linux commands remotely with role-based access control. Uses Diffie-Hellman key exchange and XOR encryption for secure communication.
+A multi-threaded, encrypted TCP client-server system for executing Linux commands remotely with role-based access control. Uses Diffie-Hellman key exchange, AES-256-CBC encryption, and HMAC-SHA256 authentication for secure communication.
 
 **Platform:** Ubuntu/Linux only
 
@@ -8,7 +8,8 @@ A multi-threaded, encrypted TCP client-server system for executing Linux command
 
 ✅ **Secure Communication**
 - Diffie-Hellman key exchange for secure key negotiation
-- XOR symmetric encryption for all data transmission
+- AES-256-CBC symmetric encryption for all data transmission
+- HMAC-SHA256 for server authentication and integrity verification
 - Hex encoding for safe TCP transmission of binary data
 
 ✅ **Authentication & Authorization**
@@ -28,9 +29,9 @@ A multi-threaded, encrypted TCP client-server system for executing Linux command
 
 ## System Requirements
 ```bash
-# Install build tools on Ubuntu/Linux
+# Install build tools and OpenSSL libraries on Ubuntu/Linux
 sudo apt-get update
-sudo apt-get install build-essential g++ make
+sudo apt-get install build-essential g++ make libssl-dev
 ```
 
 ## Project Structure
@@ -38,9 +39,10 @@ sudo apt-get install build-essential g++ make
 ### Core Files
 - **`common.h`** - Shared constants (port, buffer size, DH parameters, access levels)
 - **`security.h`** - Cryptographic class declarations
-- **`security.cpp`** - DH key exchange + XOR cipher implementation
+- **`security.cpp`** - DH key exchange + AES encryption implementation
   - `DiffieHellman` class: Key generation, shared secret computation
-  - `XORCipher` class: Encryption/decryption, hex encoding/decoding
+  - `AESCipher` class: AES-256-CBC encryption/decryption, hex encoding/decoding
+  - `computeHMAC()`: HMAC-SHA256 signature generation for server authentication
   - `isCommandAllowed()`: Access control enforcement
 
 ### Application Files
@@ -170,14 +172,15 @@ Key Size:      ~31 bits
 ```
 
 ### Encryption Method
-- **Type:** Symmetric XOR cipher
-- **Key Derivation:** Shared secret converted to string
-- **Key Extension:** Repeated to ensure sufficient length
-- **Operation:** Each byte XORed with corresponding key byte (cycling)
+- **Type:** Symmetric AES-256-CBC cipher (industry standard)
+- **Key Derivation:** SHA256(shared_secret) → 256-bit key
+- **Block Mode:** Cipher Block Chaining (CBC) with PKCS7 padding
+- **Server Authentication:** HMAC-SHA256(server_public_key, shared_secret)
 
 ### Security Features
-- Secure key exchange prevents eavesdropping on keys
-- All commands and output encrypted in transit
+- Secure key exchange via Diffie-Hellman prevents eavesdropping on keys
+- All commands and output encrypted with AES-256-CBC in transit
+- Server authenticated using HMAC-SHA256 (prevents man-in-the-middle attacks)
 - Hex encoding prevents binary data corruption in TCP stream
 - No plaintext credentials sent
 - Access control prevents unauthorized command execution

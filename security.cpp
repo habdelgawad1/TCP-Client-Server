@@ -3,6 +3,10 @@
 #include <random>       // For random number generation
 #include <sstream>      // For string stream operations
 #include <iomanip>      // For hex formatting
+#include <openssl/evp.h>   // For AES encryption
+#include <openssl/hmac.h>  // For HMAC
+#include <openssl/sha.h>   // For SHA256
+#include <cstring>      // For memcpy
 using namespace std;
 
 /**
@@ -26,26 +30,52 @@ void DiffieHellman::computeSharedSecret(long long other_key) {
 }
 
 /**
- * Initialize XOR Cipher Key
- * Converts the numeric shared secret into a string key for XOR operations.
- * Extends the key by repeating it to ensure sufficient length for encryption.
+ * Initialize AES Cipher Key
+ * Derives a 256-bit key from the numeric shared secret using SHA256.
  */
-void XORCipher::setKey(long long secret) {
-    stringstream ss;
-    ss << secret;                    
-    key = ss.str();
-    while (key.length() < 8) {       
-        key += key;                  
-    }
+void AESCipher::setKey(long long secret) {
+    unsigned char hash[SHA256_DIGEST_LENGTH];
+    string secret_str = to_string(secret);
+    SHA256((unsigned char*)secret_str.c_str(), secret_str.length(), hash);
+    memcpy(key, hash, 32);  // Copy first 32 bytes for 256-bit AES key
 }
 
-// XOR Encryption/Decryption
-string XORCipher::encrypt(const string& text) {
-    string result;
-    for (size_t i = 0; i < text.length(); i++) {
-        result += text[i] ^ key[i % key.length()];
-    }
-    return result;
+// AES Encryption (AES-256-CBC with PKCS7 padding)
+string AESCipher::encrypt(const string& text) {
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+    unsigned char iv[EVP_MAX_IV_LENGTH] = {0};  // IV of zeros for simplicity
+    
+    int len = 0;
+    int ciphertext_len = 0;
+    unsigned char ciphertext[text.length() + EVP_MAX_BLOCK_LENGTH];
+    
+    EVP_EncryptInit_ex(ctx, EVP_aes_256_cbc(), nullptr, key, iv);
+    EVP_EncryptUpdate(ctx, ciphertext, &len, (unsigned char*)text.c_str(), text.length());
+    ciphertext_len = len;
+    EVP_EncryptFinal_ex(ctx, ciphertext + len, &len);
+    ciphertext_len += len;
+    EVP_CIPHER_CTX_free(ctx);
+    
+    return string((char*)ciphertext, ciphertext_len);
+}
+
+// AES Decryption (AES-256-CBC with PKCS7 padding)
+string AESCipher::decrypt(const string& text) {
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+    unsigned char iv[EVP_MAX_IV_LENGTH] = {0};  // IV of zeros for simplicity
+    
+    int len = 0;
+    int plaintext_len = 0;
+    unsigned char plaintext[text.length() + EVP_MAX_BLOCK_LENGTH];
+    
+    EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), nullptr, key, iv);
+    EVP_DecryptUpdate(ctx, plaintext, &len, (unsigned char*)text.c_str(), text.length());
+    plaintext_len = len;
+    EVP_DecryptFinal_ex(ctx, plaintext + len, &len);
+    plaintext_len += len;
+    EVP_CIPHER_CTX_free(ctx);
+    
+    return string((char*)plaintext, plaintext_len);
 }
 
 /**
@@ -53,7 +83,7 @@ string XORCipher::encrypt(const string& text) {
  * This prevents issues with null bytes and control characters in TCP streams.
  * Each byte becomes two hex digits
  */
-string XORCipher::toHex(const string& data) {
+string AESCipher::toHex(const string& data) {
     stringstream ss;
     ss << hex << setfill('0');       
     for (unsigned char c : data) {
@@ -67,12 +97,32 @@ string XORCipher::toHex(const string& data) {
  * Converts received hex string back to original binary data.
  * Each pair of hex digits becomes one byte.
  */
-string XORCipher::fromHex(const string& hex) {
+string AESCipher::fromHex(const string& hex) {
     string result;
     for (size_t i = 0; i < hex.length(); i += 2) {
         result += (char)stoll(hex.substr(i, 2), nullptr, 16);
     }
     return result;
+}
+
+/**
+ * Compute HMAC-SHA256 for server authentication
+ * Uses the shared secret as the HMAC key
+ */
+string computeHMAC(const string& data, long long secret) {
+    unsigned char result[EVP_MAX_MD_SIZE];
+    unsigned int result_len = 0;
+    
+    string secret_str = to_string(secret);
+    HMAC(EVP_sha256(), secret_str.c_str(), secret_str.length(),
+         (unsigned char*)data.c_str(), data.length(), result, &result_len);
+    
+    stringstream ss;
+    ss << hex << setfill('0');
+    for (unsigned int i = 0; i < result_len; i++) {
+        ss << setw(2) << (unsigned int)result[i];
+    }
+    return ss.str();
 }
 
 /**

@@ -4,17 +4,18 @@
 
 CXX = g++
 CXXFLAGS = -std=c++11 -O2 -Wall -pthread
+LDFLAGS = -lssl -lcrypto
 
 # Build both client and server
 all: client server
 
 # Client executable
 client: client.cpp security.cpp
-	$(CXX) $(CXXFLAGS) -o client client.cpp security.cpp
+	$(CXX) $(CXXFLAGS) -o client client.cpp security.cpp $(LDFLAGS)
 
 # Server executable  
 server: server.cpp security.cpp
-	$(CXX) $(CXXFLAGS) -o server server.cpp security.cpp
+	$(CXX) $(CXXFLAGS) -o server server.cpp security.cpp $(LDFLAGS)
 
 # Clean build artifacts (Unix rm command)
 clean:

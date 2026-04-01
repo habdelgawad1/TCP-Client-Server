@@ -56,14 +56,16 @@ void* handle_client(void* arg){
     int client = (intptr_t)arg;
 
     DiffieHellman dh;
-    XORCipher cipher;
+    AESCipher cipher;
 
     // Diffie-Hellman Key Exchange
     dh.generateKeys();
 
-    // Send public key to client
-    string my_key = to_string(dh.getPublicKey()) + "\n";
-    send(client, my_key.c_str(), my_key.length(), 0);
+    // Send public key and authentication HMAC to client
+    string my_key = to_string(dh.getPublicKey());
+    string hmac = computeHMAC(my_key, dh.getPublicKey());
+    string auth_msg = my_key + ":" + hmac + "\n";
+    send(client, auth_msg.c_str(), auth_msg.length(), 0);
 
     // Receive client's public key
     string client_key_line;
@@ -109,7 +111,7 @@ void* handle_client(void* arg){
         if (!recvLine(client, hex)) break;
 
         string encrypted = cipher.fromHex(hex);
-        string command = cipher.encrypt(encrypted);
+        string command = cipher.decrypt(encrypted);
         
         if (!isCommandAllowed(current_level, command)) {
             string msg = cipher.toHex(cipher.encrypt("Access Denied: Level Insufficient\n")) + "\n";

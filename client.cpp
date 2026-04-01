@@ -46,19 +46,38 @@ int main() {
     
     //Initialize cryptographic objects
     DiffieHellman dh;    
-    XORCipher cipher;    
+    AESCipher cipher;    
     
     //DIFFIE-HELLMAN KEY EXCHANGE PROTOCOL
     dh.generateKeys();
     
-    // Receive server's public key
-    string server_key_line;
-    if (!recvLine(client_socket, server_key_line)) {
-        cout << "Failed To Receive Server Key" << endl;
+    // Receive server's public key and authentication HMAC
+    string server_auth_line;
+    if (!recvLine(client_socket, server_auth_line)) {
+        cout << "Failed To Receive Server Authentication" << endl;
         close(client_socket);
         return 1;
     }
-    long long server_key = stoll(server_key_line);
+    
+    size_t auth_delim = server_auth_line.find(":");
+    if (auth_delim == string::npos) {
+        cout << "Invalid Server Authentication Format" << endl;
+        close(client_socket);
+        return 1;
+    }
+    
+    string server_key_str = server_auth_line.substr(0, auth_delim);
+    string server_hmac = server_auth_line.substr(auth_delim + 1);
+    long long server_key = stoll(server_key_str);
+    
+    // Verify server authentication using HMAC
+    string expected_hmac = computeHMAC(server_key_str, stoll(server_key_str));
+    if (server_hmac != expected_hmac) {
+        cout << "Server Authentication Failed" << endl;
+        close(client_socket);
+        return 1;
+    }
+    cout << "Server Authenticated" << endl;
     
     // Send public key to the server
     string my_key = to_string(dh.getPublicKey()) + "\n";  
@@ -90,7 +109,7 @@ int main() {
             close(client_socket);
             return 1;
         }
-        string decrypted_response = cipher.encrypt(cipher.fromHex(response_hex));
+        string decrypted_response = cipher.decrypt(cipher.fromHex(response_hex));
 
         if (decrypted_response == "AUTH_SUCCESS\n") {
             cout << "Login Successful!" << endl;
@@ -105,7 +124,7 @@ int main() {
     while (getline(cin, command)) {
         if (command == "exit") break;
         
-        // Encrypt the command using XOR cipher with shared secret
+        // Encrypt the command using AES cipher with shared secret
         string encrypted = cipher.encrypt(command);
         
         // Convert encrypted binary data to hexadecimal
@@ -120,7 +139,7 @@ int main() {
             cout << "Disconnected From Server" << endl;
             break;
         }
-        string reply = cipher.encrypt(cipher.fromHex(reply_hex));
+        string reply = cipher.decrypt(cipher.fromHex(reply_hex));
         cout << "Server: " << reply;
     }
     

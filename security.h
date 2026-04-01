@@ -24,18 +24,22 @@ public:
 };
 
 /**
- * Simple symmetric cipher using XOR operation:
+ * AES-256-CBC symmetric cipher:
  */
-class XORCipher {
+class AESCipher {
 private:
-    string key;  // Shared secret
+    unsigned char key[32];  // 256-bit key for AES-256
     
 public:
-    void setKey(long long secret);           // Convert shared secret to encryption key
-    string encrypt(const string& text);      // Encrypt/decrypt text
+    void setKey(long long secret);           // Derive 256-bit key from shared secret
+    string encrypt(const string& text);      // Encrypt text with AES-256-CBC
+    string decrypt(const string& text);      // Decrypt text with AES-256-CBC
     string toHex(const string& data);        // Convert binary data to hex string
     string fromHex(const string& hex);       // Convert hex string back to binary
 };
+
+// Server authentication function using HMAC-SHA256
+string computeHMAC(const string& data, long long secret);
 
 // Modular exponentiation: compute (base^exp) mod mod efficiently
 long long power_mod(long long base, long long exp, long long mod);
