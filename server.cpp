@@ -87,7 +87,7 @@ void* handle_client(void* arg){
             return nullptr;
         }
 
-        string decrypted = cipher.encrypt(cipher.fromHex(auth_hex));
+        string decrypted = cipher.decrypt(cipher.fromHex(auth_hex));
 
         size_t delimiter = decrypted.find(":");
         if (delimiter != string::npos){
